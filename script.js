@@ -265,9 +265,20 @@ tabBtns.forEach(btn => {
   });
 });
 
-// ---- Contact Form → WhatsApp ----
-const WHATSAPP_NUMBER = '917558188910'; // Country code + number (no +)
-const contactForm = document.getElementById('contactForm');
+// =====================================================
+// WHATSAPP DIRECT ENQUIRY
+// =====================================================
+const WHATSAPP_NUMBER = '917558188910';
+
+const contactForm  = document.getElementById('contactForm');
+const formFeedback = document.getElementById('formFeedback');
+const submitBtn    = document.getElementById('submitBtn');
+const submitText   = document.getElementById('submitText');
+
+function setFeedback(msg, type) {
+  formFeedback.textContent = msg;
+  formFeedback.className   = `form-feedback ${type}`;
+}
 
 contactForm.addEventListener('submit', (e) => {
   e.preventDefault();
@@ -279,46 +290,42 @@ contactForm.addEventListener('submit', (e) => {
   const category  = document.getElementById('category').value;
   const message   = document.getElementById('message').value.trim();
 
-  // ---- Validation ----
+  // — Validation —
+  formFeedback.className = 'form-feedback'; // hide previous
   if (!firstName || !lastName || !email || !message) {
-    showNotification('Please fill in all required fields.', 'error');
+    setFeedback('Please fill in all required fields (marked with *).', 'error');
     return;
   }
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    showNotification('Please enter a valid email address.', 'error');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    setFeedback('Please enter a valid email address.', 'error');
     return;
   }
 
-  // ---- Build WhatsApp message ----
-  const categoryLabel = category
-    ? { 'automobiles': '🚗 Automobiles Industry', 'custom-car': '🎨 Custom Car',
-        'bikes': '🏍️ Bikes', 'racing': '🏁 Racing', 'aviation': '✈️ Aviation',
-        'aerospace': '🚀 Aerospace', 'uav-drone': '🛸 UAV & Drone', 'others': '⚙️ Others'
-      }[category] || category
-    : 'Not specified';
+  // — Build WhatsApp message —
+  const waMessage = [
+    `🔶 *New Enquiry — Varanus Carbon Fiber*`,
+    ``,
+    `👤 *Name:* ${firstName} ${lastName}`,
+    `📧 *Email:* ${email}`,
+    phone ? `📱 *Phone:* ${phone}` : '',
+    category ? `📦 *Product Category:* ${category}` : '',
+    ``,
+    `💬 *Message / Requirements:*`,
+    message,
+    ``,
+    `— Sent from varanus website —`,
+  ].filter(Boolean).join('\n');
 
-  const waText =
-`🔶 *NEW ENQUIRY — Varanus Carbon Fiber* 🔶
+  const waURL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(waMessage)}`;
 
-👤 *Name:* ${firstName} ${lastName}
-📧 *Email:* ${email}
-📞 *Phone:* ${phone || 'Not provided'}
-🏷️ *Category:* ${categoryLabel}
+  // Open WhatsApp in new tab
+  window.open(waURL, '_blank');
 
-💬 *Message:*
-${message}
-
----
-_Sent via varanuscarbonfiber.com_`;
-
-  // Open WhatsApp with pre-filled message
-  const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(waText)}`;
-  window.open(waUrl, '_blank');
-
-  showNotification('✅ Opening WhatsApp — your enquiry is ready to send!', 'success');
+  // Show success feedback
+  setFeedback('✔  Opening WhatsApp… Your enquiry message is ready to send!', 'success');
   contactForm.reset();
 });
+
 
 
 // ---- Notification Toast ----
@@ -444,6 +451,58 @@ document.querySelectorAll('.contact-card').forEach(card => {
   card.addEventListener('mousemove', e => apply3DTilt(card, e));
   card.addEventListener('mouseleave', () => reset3DTilt(card));
 });
+
+// =====================================================
+// ABOUT 3D GYROSCOPE — mouse-tracking rotation
+// =====================================================
+const aboutScene = document.getElementById('about3DScene');
+if (aboutScene) {
+  aboutScene.addEventListener('mouseenter', () => {
+    aboutScene.style.animationPlayState = 'paused';
+  });
+  aboutScene.addEventListener('mouseleave', () => {
+    aboutScene.style.animationPlayState = 'running';
+    aboutScene.style.transform = '';
+    aboutScene.style.transition = 'transform 0.6s ease';
+  });
+  aboutScene.addEventListener('mousemove', e => {
+    const rect = aboutScene.getBoundingClientRect();
+    const cx = rect.left + rect.width  / 2;
+    const cy = rect.top  + rect.height / 2;
+    const rx = -((e.clientY - cy) / (rect.height / 2)) * 22;
+    const ry =  ((e.clientX - cx) / (rect.width  / 2)) * 22;
+    aboutScene.style.transform =
+      `perspective(1200px) rotateX(${rx}deg) rotateY(${ry}deg) scale3d(1.05,1.05,1.05)`;
+    aboutScene.style.transition = 'transform 0.08s ease';
+  });
+}
+
+// =====================================================
+// FOOTER 3D LOGO — mouse-tracking rotation
+// =====================================================
+const footerScene = document.getElementById('footerLogo3D');
+if (footerScene) {
+  footerScene.addEventListener('mouseenter', () => {
+    // Pause CSS float animation — take control with mouse
+    footerScene.style.animationPlayState = 'paused';
+  });
+  footerScene.addEventListener('mouseleave', () => {
+    // Resume float animation
+    footerScene.style.animationPlayState = 'running';
+    footerScene.style.transform = '';
+  });
+  footerScene.addEventListener('mousemove', e => {
+    const rect = footerScene.getBoundingClientRect();
+    const cx = rect.left + rect.width  / 2;
+    const cy = rect.top  + rect.height / 2;
+    const rx = -((e.clientY - cy) / (rect.height / 2)) * 28;
+    const ry =  ((e.clientX - cx) / (rect.width  / 2)) * 28;
+    footerScene.style.transform =
+      `perspective(800px) rotateX(${rx}deg) rotateY(${ry}deg) scale3d(1.06,1.06,1.06)`;
+    footerScene.style.transition = 'transform 0.08s ease';
+  });
+}
+
 
 // =====================================================
 // 3D HERO MOUSE PARALLAX DEPTH
@@ -652,3 +711,148 @@ window.addEventListener('load', () => {
   });
 });
 
+// =====================================================
+// INTERACTIVE PARTICLE MESH BACKGROUND
+// =====================================================
+(function initParticleMesh() {
+  const canvas = document.getElementById('bgParticles');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  let w, h;
+  function resize() {
+    w = canvas.width  = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Mouse tracking
+  const mouse = { x: -9999, y: -9999 };
+  const MOUSE_RADIUS = 150;
+
+  document.addEventListener('mousemove', e => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+  });
+  document.addEventListener('mouseleave', () => {
+    mouse.x = -9999;
+    mouse.y = -9999;
+  });
+
+  // Particles
+  const PARTICLE_COUNT = 100;
+  const CONNECTION_DIST = 140;
+  const particles = [];
+
+  class Particle {
+    constructor() {
+      this.x  = Math.random() * w;
+      this.y  = Math.random() * h;
+      this.vx = (Math.random() - 0.5) * 0.6;
+      this.vy = (Math.random() - 0.5) * 0.6;
+      this.r  = 1 + Math.random() * 1.5;
+      this.baseAlpha = 0.15 + Math.random() * 0.35;
+      // Colour: mostly orange tint, some white
+      this.isOrange = Math.random() > 0.3;
+    }
+
+    update() {
+      // Mouse repulsion
+      const dx = this.x - mouse.x;
+      const dy = this.y - mouse.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < MOUSE_RADIUS && dist > 0) {
+        const force = (MOUSE_RADIUS - dist) / MOUSE_RADIUS;
+        const ax = (dx / dist) * force * 2;
+        const ay = (dy / dist) * force * 2;
+        this.vx += ax * 0.15;
+        this.vy += ay * 0.15;
+      }
+
+      // Dampen velocity
+      this.vx *= 0.98;
+      this.vy *= 0.98;
+
+      this.x += this.vx;
+      this.y += this.vy;
+
+      // Wrap around edges
+      if (this.x < -10) this.x = w + 10;
+      if (this.x > w + 10) this.x = -10;
+      if (this.y < -10) this.y = h + 10;
+      if (this.y > h + 10) this.y = -10;
+    }
+
+    draw() {
+      const alpha = this.baseAlpha;
+      if (this.isOrange) {
+        ctx.fillStyle = `rgba(255, 107, 0, ${alpha})`;
+      } else {
+        ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.6})`;
+      }
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // Init particles
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    particles.push(new Particle());
+  }
+
+  function drawConnections() {
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < CONNECTION_DIST) {
+          const opacity = (1 - dist / CONNECTION_DIST) * 0.12;
+          ctx.strokeStyle = `rgba(255, 107, 0, ${opacity})`;
+          ctx.lineWidth = 0.5;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+
+    // Draw connections to mouse (glowing lines to nearby particles)
+    if (mouse.x > 0 && mouse.y > 0) {
+      for (let i = 0; i < particles.length; i++) {
+        const dx = particles[i].x - mouse.x;
+        const dy = particles[i].y - mouse.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < MOUSE_RADIUS * 1.2) {
+          const opacity = (1 - dist / (MOUSE_RADIUS * 1.2)) * 0.25;
+          ctx.strokeStyle = `rgba(255, 140, 53, ${opacity})`;
+          ctx.lineWidth = 0.8;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(mouse.x, mouse.y);
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, w, h);
+
+    // Update & draw particles
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+
+    // Draw connecting mesh lines
+    drawConnections();
+
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+})();
